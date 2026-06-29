@@ -1,0 +1,132 @@
+<div class="modulo-clientes">
+    
+    <div class="acciones-barra">
+        <div class="filtros-grupo">
+            <div class="input-filtro">
+                <i class="bi bi-search"></i>
+                <input type="text" id="buscar-cliente" placeholder="Buscar por Razón Social o RFC...">
+            </div>
+            
+            <select id="filtro-estado-cliente">
+                <option value="">Todos los estados</option>
+                <option value="Puebla">Puebla</option>
+                <option value="Tlaxcala">Tlaxcala</option>
+                <option value="CDMX">CDMX</option>
+                <option value="Veracruz">Veracruz</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" id="btn-abrir-modal-cliente">
+            <i class="bi bi-building-plus"></i> Nuevo Cliente
+        </button>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla-gestion">
+            <thead>
+                <tr>
+                    <th>Razón Social / Empresa</th>
+                    <th>RFC</th>
+                    <th>Contacto Enlace</th>
+                    <th>Contacto Directo</th>
+                    <th>Dirección Fiscal</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-clientes-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="modal" id="modal-cliente">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="bi bi-briefcase"></i> Registrar Nuevo Cliente Comercial</h3>
+                <button class="close-modal" id="btn-cerrar-modal-cliente">&times;</button>
+            </div>
+            
+            <form id="form-registro-cliente">
+                <div class="form-grid">
+                    
+                    <div class="form-seccion full-width"><h4>Identificación Fiscal</h4></div>
+                    
+                    <div class="form-control full-width">
+                        <label>Razón Social o Nombre Completo*</label>
+                        <input type="text" id="c-razon-social" placeholder="Ej: Importaciones de Puebla S.A. de C.V." required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>RFC (México)*</label>
+                        <input type="text" id="c-rfc" maxlength="13" placeholder="12 o 13 caracteres" required style="text-transform: uppercase;">
+                        <small id="error-c-rfc" class="error-msg"></small>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Contacto Principal (Enlace)*</label>
+                        <input type="text" id="c-contacto" placeholder="Ej: Ing. Ana Martínez" required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Correo electrónico Corporativo*</label>
+                        <input type="email" id="c-correo" placeholder="proveedores@empresa.com" required>
+                        <small id="error-c-correo" class="error-msg"></small>
+                    </div>
+
+                    <div class="form-seccion full-width"><h4>Teléfonos de Contacto</h4></div>
+                    
+                    <div class="form-control">
+                        <label>Teléfono de Oficina (1)*</label>
+                        <input type="tel" id="c-tel1" placeholder="10 dígitos numéricos" required>
+                        <small id="error-c-tel1" class="error-msg"></small>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Teléfono Celular / Alterno (2)</label>
+                        <input type="tel" id="c-tel2" placeholder="10 dígitos numéricos">
+                        <small id="error-c-tel2" class="error-msg"></small>
+                    </div>
+                    
+                    <div class="form-control" style="visibility: hidden;">
+                        </div>
+
+                    <div class="form-seccion full-width"><h4>Dirección Comercial (Validación Postal)</h4></div>
+                    
+                    <div class="form-control">
+                        <label>Código Postal*</label>
+                        <input type="text" id="c-cp" maxlength="5" placeholder="Ej: 72000" required>
+                        <small id="c-cp-loading" class="hidden" style="color: var(--accent);"><i class="bi bi-arrow-clockwise"></i> Consultando en vivo...</small>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Estado</label>
+                        <input type="text" id="c-estado" readonly placeholder="Autocompletado" style="background: #f1f5f9;">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Ciudad / Municipio</label>
+                        <input type="text" id="c-municipio" readonly placeholder="Autocompletado" style="background: #f1f5f9;">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label>Colonia o Asentamiento*</label>
+                        <select id="c-colonia" required>
+                            <option value="">Escribe un CP válido...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-control full-width">
+                        <label>Dirección Local (Calle, Avenida y Número)*</label>
+                        <input type="text" id="c-direccion" placeholder="Ej: Calle 11 Sur #4502 interior 3B" required>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="btn-cancelar-cliente" style="background: #cbd5e1;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

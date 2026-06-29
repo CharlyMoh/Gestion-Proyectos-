@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión TI | Iniciar Sesión</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="login-body">
+
+    <div class="login-card">
+        <div class="login-header">
+            <i class="bi bi-layers-half login-logo"></i>
+            <h2>Control de Gestión</h2>
+            <p>Ingresa tus credenciales de acceso</p>
+        </div>
+
+        <form id="form-login" class="login-form">
+            <div class="form-group">
+                <label for="username"><i class="bi bi-person"></i> Usuario</label>
+                <input type="text" id="username" placeholder="Ej: admin_super" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="bi bi-lock"></i> Contraseña</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div id="login-error" class="alert-danger hidden"></div>
+
+            <button type="submit" class="btn-login">
+                Entrar <i class="bi bi-box-arrow-in-right"></i>
+            </button>
+        </form>
+    </div>
+
+    <script src="js/login.js" type="module"></script>
+</body>
+</html>

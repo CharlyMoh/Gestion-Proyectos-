@@ -1,0 +1,112 @@
+<div class="modulo-proyectos">
+    
+    <div class="acciones-barra">
+        <div class="filtros-grupo">
+            <div class="input-filtro">
+                <i class="bi bi-search"></i>
+                <input type="text" id="buscar-proyecto" placeholder="Buscar por nombre del proyecto...">
+            </div>
+            
+            <select id="filtro-estatus-proyecto">
+                <option value="">Todos los estatus</option>
+                <option value="Planeación">Planeación</option>
+                <option value="En Progreso">En Progreso</option>
+                <option value="En Pruebas">En Pruebas</option>
+                <option value="Suspendido">Suspendido</option>
+                <option value="Entregado">Entregado</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" id="btn-abrir-modal-proyecto">
+            <i class="bi bi-folder-plus"></i> Nuevo Proyecto
+        </button>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla-gestion">
+            <thead>
+                <tr>
+                    <th>Proyecto</th>
+                    <th>Cliente Comercial</th>
+                    <th>Líder Responsable</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Entrega</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-proyectos-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="modal" id="modal-proyecto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="bi bi-folder-fill"></i> Registrar Nuevo Proyecto TI</h3>
+                <button class="close-modal" id="btn-cerrar-modal-proyecto">&times;</button>
+            </div>
+            
+            <form id="form-registro-proyecto">
+                <div class="form-grid">
+                    
+                    <div class="form-seccion full-width"><h4>Información General</h4></div>
+                    
+                    <div class="form-control full-width">
+                        <label>Nombre del Proyecto*</label>
+                        <input type="text" id="p-nombre" placeholder="Ej: Desarrollo de API de Facturación" required>
+                    </div>
+                    
+                    <div class="form-control full-width">
+                        <label>Descripción / Alcance Técnico</label>
+                        <textarea id="p-descripcion" rows="3" placeholder="Detalla los entregables mínimos del proyecto..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 0.375rem; padding: 0.5rem; outline: none; resize: none; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div class="form-seccion full-width"><h4>Asignación y Fechas</h4></div>
+
+                    <div class="form-control">
+                        <label>Cliente Beneficiario*</label>
+                        <select id="p-id-cliente" required>
+                            <option value="">Cargando clientes activos...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label>Líder de Proyecto Asignado*</label>
+                        <select id="p-id-usuario" required>
+                            <option value="">Cargando personal activo...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label>Estatus Inicial*</label>
+                        <select id="p-estatus" required>
+                            <option value="Planeación">Planeación</option>
+                            <option value="En Progreso">En Progreso</option>
+                            <option value="En Pruebas">En Pruebas</option>
+                            <option value="Suspendido">Suspendido</option>
+                            <option value="Entregado">Entregado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label>Fecha de Inicio*</label>
+                        <input type="date" id="p-fecha-inicio" required>
+                    </div>
+
+                    <div class="form-control">
+                        <label>Fecha Estimada de Entrega*</label>
+                        <input type="date" id="p-fecha-entrega" required>
+                        <small id="error-p-fechas" class="error-msg"></small>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="btn-cancelar-proyecto" style="background: #cbd5e1;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Proyecto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

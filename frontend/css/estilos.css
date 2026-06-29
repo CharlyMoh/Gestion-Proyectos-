@@ -1,0 +1,704 @@
+/* ==========================================================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL
+   ========================================================================== */
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-light: #f8fafc;
+    --text-main: #334155;
+    --text-muted: #64748b;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --border-color: #e2e8f0;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   2. LAYOUT DEL DASHBOARD PRINCIPAL
+   ========================================================================== */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Barra Lateral (Sidebar) */
+.sidebar {
+    background-color: var(--bg-primary);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #334155;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: var(--accent);
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    flex-grow: 1;
+}
+
+.nav-link {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: white;
+    background-color: var(--bg-secondary);
+}
+
+.nav-link.active {
+    border-left: 4px solid var(--accent);
+}
+
+/* Footer del Sidebar (Badge de Usuario) */
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.user-badge i {
+    font-size: 1.5rem;
+    color: var(--success);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-info small {
+    color: var(--text-muted);
+}
+
+/* Área de Trabajo Derecha (Main Content) */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.top-bar {
+    background-color: white;
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.top-bar h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.content-body {
+    padding: 2rem;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   3. COMPONENTES COMUNES (Botones, Buscadores y Alertas)
+   ========================================================================== */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-hover);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: var(--danger);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+    border: 1px solid #fca5a5;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   4. INTERFAZ DE LOGIN
+   ========================================================================== */
+.login-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--bg-primary);
+}
+
+.login-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-logo {
+    font-size: 3rem;
+    color: var(--accent);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: var(--accent);
+}
+
+.btn-login {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.btn-login:hover {
+    background-color: var(--accent-hover);
+}
+
+/* ==========================================================================
+   5. CONTROLES DE MÓDULO (Filtros, Acciones y Tablas)
+   ========================================================================== */
+.acciones-barra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.filtros-grupo {
+    display: flex;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+.input-filtro {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.input-filtro i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.input-filtro input {
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 2.2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    outline: none;
+}
+
+.input-filtro input:focus {
+    border-color: var(--accent);
+}
+
+.filtros-grupo select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background: white;
+    color: var(--text-main);
+    outline: none;
+    cursor: pointer;
+}
+
+/* Estilos de Tablas Modernas */
+.tabla-contenedor {
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tabla-gestion {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.tabla-gestion th {
+    background-color: #f8fafc;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tabla-gestion td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.tabla-gestion tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* ==========================================================================
+   6. MODALES Y FORMULARIOS COMPLEJOS (Scroll & Grid)
+   ========================================================================== */
+.modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(15, 23, 42, 0.6); 
+    z-index: 1000; 
+    justify-content: center; 
+    align-items: flex-start; 
+    overflow-y: auto;        
+    padding: 2rem 0;
+}
+
+.modal.mostrar { 
+    display: flex; 
+}
+
+.modal-content { 
+    background: white; 
+    width: 90%; 
+    max-width: 850px; 
+    border-radius: 0.5rem; 
+    display: flex; 
+    flex-direction: column; 
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    margin: auto; 
+}
+
+.modal-header { 
+    padding: 1.2rem 1.5rem; 
+    border-bottom: 1px solid var(--border-color); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--bg-primary);
+}
+
+.close-modal { 
+    background: none; 
+    border: none; 
+    font-size: 1.8rem; 
+    cursor: pointer; 
+    color: var(--text-muted); 
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: var(--danger);
+}
+
+/* Cuerpo interno con estructura Grid de 3 columnas */
+.form-grid { 
+    padding: 1.5rem; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.2rem; 
+}
+
+.form-seccion { 
+    margin-top: 0.5rem; 
+    border-bottom: 1px solid var(--border-color); 
+    padding-bottom: 0.25rem; 
+    color: var(--accent); 
+}
+
+.form-seccion h4 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.form-control { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.35rem; 
+}
+
+.form-control label { 
+    font-size: 0.85rem; 
+    font-weight: 500; 
+    color: var(--text-main); 
+}
+
+.form-control input, 
+.form-control select { 
+    padding: 0.55rem; 
+    border: 1px solid var(--border-color); 
+    border-radius: 0.375rem; 
+    font-size: 0.9rem; 
+    outline: none;
+    width: 100%;
+}
+
+.form-control input:focus, 
+.form-control select:focus {
+    border-color: var(--accent);
+}
+
+.full-width { 
+    grid-column: span 3; 
+}
+
+.modal-footer { 
+    padding: 1rem 1.5rem; 
+    border-top: 1px solid var(--border-color); 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 1rem; 
+}
+
+/* ==========================================================================
+   7. SEÑALES Y MENSAJES DE VALIDACIÓN DINÁMICA
+   ========================================================================== */
+.error-msg {
+    color: var(--danger);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.success-msg {
+    color: var(--success);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.input-error {
+    border-color: var(--danger) !important;
+    background-color: #fff5f5 !important;
+}
+
+.input-success {
+    border-color: var(--success) !important;
+    background-color: #f0fdf4 !important;
+}
+
+/* CONFIGURACIÓN DEL FOOTER Y BOTÓN DE LOGOUT */
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-top: 1px solid #334155;
+    padding-top: 1.2rem;
+}
+
+.btn-logout-sidebar {
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 0.6rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.25s ease;
+}
+
+.btn-logout-sidebar:hover {
+    background-color: var(--danger);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* ==========================================================================
+   8. SISTEMA DE PESTAÑAS (TABS) Y BADGES DE ESTATUS
+   ========================================================================== */
+.tabs-contenedor {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.1rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 0.375rem 0.375rem 0 0;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: var(--accent);
+    background-color: #f1f5f9;
+}
+
+.tab-btn.tab-activa {
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent);
+    background-color: transparent;
+}
+
+/* Etiquetas/Badges para el Historial u Operadores */
+.badge-status {
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.badge-pendiente {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge-aceptada {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.badge-rechazada {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* ==========================================================================
+   9. PERSONALIZACIÓN COMPATIBLE PARA SWEETALERT2
+   ========================================================================== */
+.swal2-popup-custom {
+    font-family: 'Segoe UI', sans-serif !important;
+    border-radius: 0.5rem !important;
+    padding: 2rem !important;
+}
+
+.swal2-title-custom {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    color: var(--bg-primary) !important;
+}
+
+.swal2-html-custom {
+    font-size: 0.95rem !important;
+    color: var(--text-main) !important;
+}
+
+/* Botones con el diseño exacto de tu Dashboard */
+.swal2-confirm-custom {
+    background-color: var(--accent) !important;
+    color: white !important;
+    font-weight: 500 !important;
+    border-radius: 0.375rem !important;
+    padding: 0.6rem 1.2rem !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+.swal2-confirm-custom:hover {
+    background-color: var(--accent-hover) !important;
+}
+
+.swal2-cancel-custom {
+    background-color: #cbd5e1 !important;
+    color: var(--text-main) !important;
+    font-weight: 500 !important;
+    border-radius: 0.375rem !important;
+    padding: 0.6rem 1.2rem !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+.swal2-cancel-custom:hover {
+    background-color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   10. SELECTOR DE ACCIONES EN TABLAS HOMOGÉNEO (VERSIÓN BLINDADA)
+   ========================================================================== */
+.select-acciones-p {
+    --select-arrow-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
+
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    display: inline-block !important;
+
+    background-color: #ffffff !important;
+    background-image: var(--select-arrow-bg) !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.6rem center !important;
+    background-size: 0.9rem !important;
+
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    font-family: inherit !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 0.4rem 2rem 0.4rem 0.75rem !important;
+    border-radius: 0.375rem !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    width: 155px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.select-acciones-p::-ms-expand {
+    display: none;
+}
+
+.tabla-gestion td .select-acciones-p {
+    vertical-align: middle;
+}
+
+.select-acciones-p--full {
+    width: 100% !important;
+    margin-top: 0.35rem;
+}
+
+.select-acciones-p:hover {
+    border-color: #94a3b8 !important;
+    background-color: #f8fafc !important;
+    background-image: var(--select-arrow-bg) !important;
+}
+
+.select-acciones-p:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.08) !important;
+    background-color: #ffffff !important;
+    background-image: var(--select-arrow-bg) !important;
+}

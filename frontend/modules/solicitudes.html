@@ -1,0 +1,27 @@
+<div class="modulo-solicitudes">
+    
+    <div class="tabs-contenedor">
+        <button class="tab-btn tab-activa" id="tab-pendientes" data-tab="pendientes">
+            <i class="bi bi-hourglass-split"></i> Pendientes de Revisión
+        </button>
+        <button class="tab-btn" id="tab-historial" data-tab="historial">
+            <i class="bi bi-clock-history"></i> Historial Completo
+        </button>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla-gestion">
+            <thead>
+                <tr>
+                    <th>Fecha Solicitud</th>
+                    <th>Cliente a Eliminar</th>
+                    <th>RFC</th>
+                    <th>Usuario Solicitante</th>
+                    <th style="text-align: center; width: 180px;">Acción / Estatus</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-solicitudes-body">
+                </tbody>
+        </table>
+    </div>
+</div>

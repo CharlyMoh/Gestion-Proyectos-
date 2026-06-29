@@ -1,0 +1,166 @@
+<div class="modulo-usuarios">
+    
+    <div class="acciones-barra">
+        <div class="filtros-grupo">
+            <div class="input-filtro">
+                <i class="bi bi-search"></i>
+                <input type="text" id="buscar-usuario" placeholder="Buscar por Nombre, Apellido o CURP...">
+            </div>
+            
+            <select id="filtro-area">
+                <option value="">Todas las áreas</option>
+                </select>
+
+            <select id="filtro-estado">
+                <option value="">Todos los estados</option>
+                <option value="Puebla">Puebla</option>
+                <option value="Tlaxcala">Tlaxcala</option>
+                <option value="CDMX">CDMX</option>
+                </select>
+        </div>
+
+        <button class="btn btn-primary" id="btn-abrir-modal-usuario">
+            <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+        </button>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla-gestion">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Nombre Completo</th>
+                    <th>CURP</th>
+                    <th>Área</th>
+                    <th>Contacto</th>
+                    <th>Ubicación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-usuarios-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="modal" id="modal-usuario">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="bi bi-person-plus"></i> Registrar Nuevo Usuario</h3>
+                <button class="close-modal" id="btn-cerrar-modal-usuario">&times;</button>
+            </div>
+            <form id="form-registro-usuario">
+                <div class="form-grid">
+                    
+                    <div class="form-seccion full-width"><h4>Credenciales de Acceso</h4></div>
+                    <div class="form-control">
+                        <label>Nombre de usuario*</label>
+                        <input type="text" id="u-username" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Contraseña*</label>
+                        <input type="password" id="u-password" required placeholder="Min. 8 carac. (Letras y Números)">
+                        <small id="error-pass-match" class="error-msg"></small>
+                    </div>
+                    <div class="form-control">
+                        <label>Confirmar contraseña*</label>
+                        <input type="password" id="u-confirm-password" required>
+                        <small id="success-pass-match" class="success-msg"></small>
+                    </div>
+                    <div class="form-control">
+                        <label>Rol de Sistema*</label>
+                        <select id="u-rol" required>
+                            <option value="Operador">Operador</option>
+                            <option value="Supervisor">Supervisor</option>
+                        </select>
+                    </div>
+
+                    <div class="form-seccion full-width"><h4>Datos Personales</h4></div>
+                    <div class="form-control">
+                        <label>Nombre(s)*</label>
+                        <input type="text" id="u-nombre" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Apellido Paterno*</label>
+                        <input type="text" id="u-paterno" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Apellido Materno</label>
+                        <input type="text" id="u-materno">
+                    </div>
+                    <div class="form-control">
+                        <label>CURP*</label>
+                        <input type="text" id="u-curp" maxlength="18" required style="text-transform: uppercase;">
+                        <small id="error-curp" class="error-msg"></small>
+                    </div>
+
+                    <div class="form-seccion full-width"><h4>Contacto</h4></div>
+                    <div class="form-control">
+                        <label>Correo electrónico*</label>
+                        <input type="email" id="u-correo" required placeholder="ejemplo@correo.com">
+                        <small id="error-correo" class="error-msg"></small>
+                    </div>
+                    <div class="form-control">
+                        <label>Teléfono de contacto 1*</label>
+                        <input type="tel" id="u-tel1" required placeholder="10 dígitos">
+                        <small id="error-tel1" class="error-msg"></small>
+                    </div>
+                    <div class="form-control">
+                        <label>Teléfono de contacto 2</label>
+                        <input type="tel" id="u-tel2">
+                        <small id="error-tel2" class="error-msg"></small>
+                    </div>
+                    <div class="form-seccion full-width"><h4>Información Laboral</h4></div>
+                    <div class="form-control">
+                        <label>Fecha de contratación*</label>
+                        <input type="date" id="u-fecha-contratacion" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Área o Lugar de contratación*</label>
+                        <select id="u-id-area" required>
+                            </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Número de Seguro Social (NSS)*</label>
+                        <input type="text" id="u-nss" maxlength="11" required placeholder="11 dígitos">
+                        <small id="error-nss" class="error-msg"></small>
+                    </div>
+                    <div class="form-control">
+                        <label>Fecha Alta Servicio Salud*</label>
+                        <input type="date" id="u-fecha-salud" required>
+                    </div>
+
+                    <div class="form-seccion full-width"><h4>Dirección (Validación vía Postali)</h4></div>
+                    <div class="form-control">
+                        <label>Código Postal*</label>
+                        <input type="text" id="u-cp" maxlength="5" placeholder="Ej: 72200" required>
+                        <small id="cp-loading" class="hidden" style="color: var(--accent);"><i class="bi bi-arrow-clockwise"></i> Buscando...</small>
+                    </div>
+                    <div class="form-control">
+                        <label>Estado</label>
+                        <input type="text" id="u-estado" readonly placeholder="Autocompletado" style="background: #f1f5f9;">
+                    </div>
+                    <div class="form-control">
+                        <label>Ciudad / Municipio</label>
+                        <input type="text" id="u-municipio" readonly placeholder="Autocompletado" style="background: #f1f5f9;">
+                    </div>
+                    <div class="form-control">
+                        <label>Colonia / Asentamiento*</label>
+                        <select id="u-colonia" required>
+                            <option value="">Escribe un CP válido...</option>
+                        </select>
+                    </div>
+                    <div class="form-control full-width">
+                        <label>Dirección (Calle y Número)*</label>
+                        <input type="text" id="u-direccion" placeholder="Ej: Av. Reforma #405" required>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="btn-cancelar-usuario" style="background: #cbd5e1;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

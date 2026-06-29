@@ -1,0 +1,20 @@
+{
+  "name": "sistemagestionproyectos",
+  "version": "1.0.0",
+  "description": "Sistema de gestión ligera",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.5"
+  }
+}
