@@ -26,84 +26,120 @@ async function listarSolicitudes() {
     const tablaBody = document.getElementById('tabla-solicitudes-body');
     if (!tablaBody) return;
 
-    // Recuperamos la sesión para conocer el Rol e ID del usuario conectado
     const sesion = JSON.parse(localStorage.getItem('sesion_usuario'));
-    
+
     try {
-        // Decidir a qué endpoint apuntar según la pestaña activa
-        const endpoint = pestañaActiva === 'pendientes' ? '/api/solicitudes/pendientes' : '/api/solicitudes/historial';
-        
-        // Enviamos el ID y Rol como parámetros Query para que el backend filtre si es Operador
+        const endpoint = pestañaActiva === 'pendientes'
+            ? '/api/solicitudes/pendientes'
+            : '/api/solicitudes/historial';
+
         const url = `${endpoint}?id_usuario=${sesion.id_usuario}&rol=${sesion.rol}`;
-        
+
         const respuesta = await fetch(url);
         const solicitudes = await respuesta.json();
 
         tablaBody.innerHTML = '';
 
         if (solicitudes.length === 0) {
-            const mensaje = pestañaActiva === 'pendientes' 
-                ? 'No hay solicitudes pendientes de revisión.' 
-                : 'El historial de solicitudes se encuentra vacío.';
-            tablaBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:2rem;">${mensaje}</td></tr>`;
+            const mensaje = pestañaActiva === 'pendientes'
+                ? 'No hay solicitudes pendientes.'
+                : 'No hay solicitudes en el historial.';
+
+            tablaBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                        ${mensaje}
+                    </td>
+                </tr>
+            `;
             return;
         }
 
         solicitudes.forEach(sol => {
+
             const tr = document.createElement('tr');
-            const fecha = new Date(sol.fecha_solicitud).toLocaleString('es-MX');
+            const fSolicitud = new Date(sol.fecha_solicitud).toLocaleDateString('es-MX');
 
-            // Construcción de la celda final (Acciones o Estatus)
-            let celdaAccionEstatus = '';
+            // Badge de estatus
+            let badge = `
+                <span class="badge-status" style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:12px;font-size:.78rem;font-weight:600;">
+                    <i class="bi bi-clock-history"></i> ${sol.estatus}
+                </span>
+            `;
 
-            // CRITERIO DE RENDERIZADO:
-            // Si la pestaña es 'historial' O el usuario logueado es un 'Operador', se muestra FORZOSAMENTE un Badge de estatus fijo
-            if (pestañaActiva === 'historial' || sesion.rol === 'Operador') {
-                let claseBadge = 'badge-pendiente';
-                let iconoBadge = '<i class="bi bi-clock"></i>';
-
-                if (sol.estatus === 'Aceptada') {
-                    claseBadge = 'badge-activa badge-aceptada';
-                    iconoBadge = '<i class="bi bi-check-circle-fill"></i>';
-                } else if (sol.estatus === 'Rechazada') {
-                    claseBadge = 'badge-activa badge-rechazada';
-                    iconoBadge = '<i class="bi bi-x-circle-fill"></i>';
-                }
-
-                celdaAccionEstatus = `
-                    <div style="text-align: center;">
-                        <span class="badge-status ${claseBadge}">${iconoBadge} ${sol.estatus}</span>
-                    </div>
+            if (sol.estatus === 'Aceptada' || sol.estatus === 'Aprobada') {
+                badge = `
+                    <span class="badge-status badge-activa badge-aceptada">
+                        <i class="bi bi-check-circle-fill"></i> ${sol.estatus}
+                    </span>
                 `;
-            } else {
-                // Si la pestaña es 'pendientes' Y el usuario es 'Supervisor', mostramos el selector homogéneo de acciones
-                celdaAccionEstatus = `
-                    <div style="text-align: center;">
-                        <select class="select-acciones-p" data-id="${sol.id_solicitud}">
-                            <option value="" selected disabled>-- Acciones --</option>
-                            <option value="Aceptada">Autorizar eliminación</option>
-                            <option value="Rechazada">Rechazar solicitud</option>
-                        </select>
+            }
+
+            if (sol.estatus === 'Rechazada') {
+                badge = `
+                    <span class="badge-status badge-activa badge-rechazada">
+                        <i class="bi bi-x-circle-fill"></i> ${sol.estatus}
+                    </span>
+                `;
+            }
+
+            // Columna de acciones
+            let acciones = badge;
+
+            // Sólo Supervisor en pendientes puede aceptar/rechazar
+            if (pestañaActiva === 'pendientes' && sesion.rol !== 'Operador') {
+                acciones = `
+                    <div style="display:flex;gap:.4rem;align-items:center;justify-content:center;">
+                        <button class="btn-accion-check btn-aceptar-sol"
+                                data-id="${sol.id_solicitud}"
+                                title="Aceptar Solicitud">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+
+                        <button class="btn-accion-x btn-rechazar-sol"
+                                data-id="${sol.id_solicitud}"
+                                title="Rechazar Solicitud">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
                 `;
             }
 
             tr.innerHTML = `
-                <td>${fecha}</td>
-                <td><strong>${sol.razon_social}</strong></td>
-                <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:bold;">${sol.rfc}</code></td>
-                <td><i class="bi bi-person-circle"></i> ${sol.operador_nombre} (<em>${sol.operador_username}</em>)</td>
-                <td>${celdaAccionEstatus}</td>
+                <td><strong>${sol.tipo_solicitud ?? 'Solicitud de Baja'}</strong></td>
+
+                <td>
+                    <i class="bi bi-person-fill"></i>
+                    ${sol.solicitante_nombre ?? sol.operador_nombre}
+                </td>
+
+                <td>
+                    ${sol.detalles ??
+                        `<strong>${sol.razon_social}</strong><br>
+                        <small>${sol.rfc}</small>`}
+                </td>
+
+                <td>${fSolicitud}</td>
+
+                <td>${badge}</td>
+
+                <td>${acciones}</td>
             `;
 
-            const selectAcciones = tr.querySelector('.select-acciones-p');
-            if (selectAcciones) {
-                selectAcciones.addEventListener('change', async (e) => {
-                    const accion = e.target.value;
-                    if (!accion) return;
+            // Eventos de los botones
+            const btnAceptar = tr.querySelector('.btn-aceptar-sol');
+            if (btnAceptar) {
+                btnAceptar.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    procesarSolicitudBaja(id, 'Aceptada');
+                });
+            }
 
-                    await procesarSolicitudBaja(sol.id_solicitud, accion);
-                    e.target.value = '';
+            const btnRechazar = tr.querySelector('.btn-rechazar-sol');
+            if (btnRechazar) {
+                btnRechazar.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    procesarSolicitudBaja(id, 'Rechazada');
                 });
             }
 
@@ -111,7 +147,13 @@ async function listarSolicitudes() {
         });
 
     } catch (error) {
-        tablaBody.innerHTML = `<tr><td colspan="5" style="color:var(--danger); text-align:center; padding:1rem;">Error al listar solicitudes: ${error.message}</td></tr>`;
+        tablaBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="color:var(--danger);text-align:center;padding:1rem;">
+                    Error al listar solicitudes: ${error.message}
+                </td>
+            </tr>
+        `;
     }
 }
 

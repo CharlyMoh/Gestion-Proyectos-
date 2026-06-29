@@ -2,44 +2,61 @@ import db from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
 // 1. OBTENER USUARIOS (Con criterios de filtrado robustos)
+// LISTAR USUARIOS CON FILTRADO CRUZADO ROBUSTO (Buscador, Área y Estado)
 export const getUsuarios = async (req, res) => {
     try {
+        // 1. Extraer los parámetros que manda el Frontend como Query Strings
         const { busqueda, id_area, estado } = req.query;
-        
-        // Base de la consulta (Solo usuarios activos)
+
+        // 2. Base de la consulta con el INNER JOIN correspondiente
         let query = `
-            SELECT u.id_usuario, u.username, u.rol, u.nombre, u.apellido_paterno, u.apellido_materno, 
-                   u.curp, u.correo, u.telefono_1, u.fecha_contratacion, a.nombre_area, 
-                   u.direccion, u.colonia, u.municipio, u.estado, u.codigo_postal
+            SELECT u.id_usuario, u.username, u.rol, u.nombre, u.apellido_paterno, u.apellido_materno,
+                   u.curp, u.correo, u.telefono_1, u.telefono_2, u.fecha_contratacion, u.id_area,
+                   u.direccion, u.colonia, u.municipio, u.estado, u.codigo_postal, u.nss, u.fecha_alta_salud,
+                   a.nombre_area
             FROM usuarios u
             INNER JOIN cat_areas a ON u.id_area = a.id_area
             WHERE u.activo = 1
         `;
         const params = [];
 
-        // Filtro por búsqueda predictiva (Nombre, Apellido o CURP)
-        if (busqueda) {
-            query += ` AND (u.nombre LIKE ? OR u.apellido_paterno LIKE ? OR u.curp LIKE ?)`;
-            const concatBusqueda = `%${busqueda}%`;
-            params.push(concatBusqueda, concatBusqueda, concatBusqueda);
+        // 3. FILTRO A: Por caja de texto (Nombre, Apellido o CURP)
+        if (busqueda && busqueda.trim() !== '') {
+            // Usamos CONCAT_WS para unir virtualmente los campos con un espacio intermedio
+            query += ` AND (
+                CONCAT_WS(' ', u.nombre, u.apellido_paterno, u.apellido_materno) LIKE ? 
+                OR u.curp LIKE ? 
+                OR u.username LIKE ?
+            )`;
+            
+            const value = `%${busqueda.trim()}%`;
+            params.push(value, value, value);
         }
 
-        // Filtro por Área de contratación
-        if (id_area) {
+        // 4. FILTRO B: Por Área de contratación (Llave foránea numérica)
+        if (id_area && id_area !== '') {
             query += ` AND u.id_area = ?`;
-            params.push(id_area);
+            params.push(Number(id_area)); // Forzamos que entre como entero numérico
         }
 
-        // Filtro por Estado
-        if (estado) {
+        // 5. FILTRO C: Por Estado federativo dinámico
+        if (estado && estado !== '') {
             query += ` AND u.estado = ?`;
             params.push(estado);
         }
 
+        // Ordenar siempre por los ingresos más recientes
+        query += ` ORDER BY u.id_usuario DESC`;
+
+        // 6. Ejecutar la consulta pasando el array de parámetros limpios
         const [rows] = await db.query(query, params);
+        
+        // Enviamos la respuesta limpia en un array JSON
         res.json(rows);
+
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener usuarios', error: error.message });
+        console.error("Error crítico en getUsuarios:", error);
+        res.status(500).json({ mensaje: 'Error al consultar el personal con filtros', error: error.message });
     }
 };
 
@@ -182,5 +199,36 @@ export const loginUsuario = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ mensaje: 'Error en el proceso de login', error: error.message });
+    }
+};
+
+// OBTENER LA LISTA DE ESTADOS ÚNICOS DONDE HAY USUARIOS REGISTRADOS
+export const getEstadosUsuariosActivos = async (req, res) => {
+    try {
+        const query = `
+            SELECT DISTINCT estado 
+            FROM usuarios 
+            WHERE activo = 1 AND estado IS NOT NULL AND estado != ''
+            ORDER BY estado ASC
+        `;
+        const [rows] = await db.query(query);
+        const listaEstados = rows.map(row => row.estado);
+        res.json(listaEstados);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al consultar los estados de nómina', error: error.message });
+    }
+};
+
+// OBTENER TODAS LAS ÁREAS ACTIVAS DESDE LA BASE DE DATOS
+export const getAreas = async (req, res) => {
+    try {
+        // Consultamos las columnas clave de tu tabla cat_areas
+        const query = 'SELECT id_area, nombre_area FROM cat_areas ORDER BY nombre_area ASC';
+        const [rows] = await db.query(query);
+        
+        // Respondemos con el array completo de filas de MySQL
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al consultar el catálogo de áreas', error: error.message });
     }
 };

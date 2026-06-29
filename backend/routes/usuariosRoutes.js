@@ -1,7 +1,7 @@
 import express from 'express';
 import db from '../config/db.js';
 import https from 'https';
-import { getUsuarios, createUsuario, eliminarUsuario, loginUsuario } from '../controllers/usuariosController.js';
+import { getUsuarios, createUsuario, eliminarUsuario, loginUsuario, getEstadosUsuariosActivos } from '../controllers/usuariosController.js';
 
 const router = express.Router();
 
@@ -11,6 +11,7 @@ router.get('/', getUsuarios);
 // 2. Ruta para registrar un usuario
 router.post('/', createUsuario);
 
+router.get('/estados-activos', getEstadosUsuariosActivos);
 // 3. Ruta para eliminación (Recibe el ID por parámetro y las credenciales por BODY)
 router.post('/eliminar/:id', eliminarUsuario);
 

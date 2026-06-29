@@ -9,16 +9,17 @@
             
             <select id="filtro-estado-cliente">
                 <option value="">Todos los estados</option>
-                <option value="Puebla">Puebla</option>
-                <option value="Tlaxcala">Tlaxcala</option>
-                <option value="CDMX">CDMX</option>
-                <option value="Veracruz">Veracruz</option>
             </select>
         </div>
-
-        <button class="btn btn-primary" id="btn-abrir-modal-cliente">
-            <i class="bi bi-building-plus"></i> Nuevo Cliente
-        </button>
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn" id="btn-pdf-clientes" style="background: #ef4444; color: white;">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
+            </button>
+            <button class="btn btn-primary" id="btn-abrir-modal-cliente">
+                <i class="bi bi-briefcase-fill"></i> Nuevo Cliente
+            </button>
+        </div>
     </div>
 
     <div class="tabla-contenedor">

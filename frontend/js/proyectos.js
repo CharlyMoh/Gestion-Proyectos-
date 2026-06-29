@@ -1,5 +1,30 @@
+import {exportarA_PDF} from './reportes.js'; // Importación de la función centralizada para exportar a PDF
+let proyectosCargados = []; // Variable global para almacenar los proyectos cargados
+
 export async function initProyectos() {
     console.log("Inicializando lógica de Control de Proyectos...");
+
+    // Escuchador del botón PDF
+    document.getElementById('btn-pdf-proyectos').addEventListener('click', () => {
+        if (proyectosCargados.length === 0) {
+            window.Swal.fire({ title: 'Reporte Vacío', text: 'No hay datos en la tabla para exportar.', icon: 'info' });
+            return;
+        }
+
+        const cabeceras = ["PROYECTO", "CLIENTE COMERCIAL", "LÍDER RESPONSABLE", "FECHA INICIO", "FECHA ENTREGA", "ESTATUS"];
+        
+        // Mapeamos los datos de los objetos cargados al formato plano de la tabla PDF
+        const filas = proyectosCargados.map(p => [
+            p.nombre_proyecto,
+            p.cliente_nombre,
+            p.lider_nombre,
+            new Date(p.fecha_inicio).toLocaleDateString('es-MX'),
+            new Date(p.fecha_entrega).toLocaleDateString('es-MX'),
+            p.estatus
+        ]);
+
+        exportarA_PDF("Control de Proyectos Tecnológicos", cabeceras, filas);
+    });
 
     await listarProyectos();
 
@@ -187,6 +212,7 @@ async function abrirModalEditarEstatus(id, nombre, estatusActual) {
 }
 
 // LECTURA DINÁMICA DE LA TABLA
+// LECTURA DINÁMICA DE LA TABLA CON FILTRO DE AUDITORÍA Y ROL
 async function listarProyectos() {
     const tablaBody = document.getElementById('tabla-proyectos-body');
     if (!tablaBody) return;
@@ -194,62 +220,59 @@ async function listarProyectos() {
     const busqueda = document.getElementById('buscar-proyecto').value;
     const estatus = document.getElementById('filtro-estatus-proyecto').value;
 
+    // 1. Extraer de forma segura los datos del usuario logueado en la SPA
+    const sesion = JSON.parse(localStorage.getItem('sesion_usuario')) || { id_usuario: 0, rol: 'Operador' };
+
     try {
-        const url = `/api/proyectos?busqueda=${encodeURIComponent(busqueda)}&estatus=${encodeURIComponent(estatus)}`;
+        // 2. Adjuntamos el rol y el ID como query strings invisibles en la petición HTTP
+        const url = `/api/proyectos?busqueda=${encodeURIComponent(busqueda)}&estatus=${encodeURIComponent(estatus)}&usuario_rol=${sesion.rol}&usuario_id=${sesion.id_usuario}`;
+        
         const res = await fetch(url);
         const proyectos = await res.json();
 
         tablaBody.innerHTML = '';
+        proyectosCargados = proyectos; // Para que el reporte PDF salga idéntico al filtro
 
         if (proyectos.length === 0) {
-            tablaBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">No se encontraron proyectos registrados.</td></tr>`;
+            tablaBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray; padding:2rem;">No tienes proyectos de software asignados en este momento.</td></tr>`;
             return;
         }
 
+        // 3. Renderizado tradicional de la grilla (ForEach...)
         proyectos.forEach(p => {
             const tr = document.createElement('tr');
-
             const fInicio = new Date(p.fecha_inicio).toLocaleDateString('es-MX');
             const fEntrega = new Date(p.fecha_entrega).toLocaleDateString('es-MX');
 
-            // RENDERIZADO DEL SELECTOR DE ACCIONES CORPORATIVO
             tr.innerHTML = `
-            <td><strong>${p.nombre_proyecto}</strong><br><small style="color:gray;">${p.descripcion || 'Sin descripción'}</small></td>
-            <td><i class="bi bi-building"></i> ${p.cliente_nombre}</td>
-            <td><i class="bi bi-person-workspace"></i> ${p.lider_nombre}</td>
-            <td>${fInicio}</td>
-            <td>${fEntrega}</td>
-            <td><span class="badge-status badge-pendiente" style="background:#e0f2fe; color:#0369a1;"><i class="bi bi-gear-wide-connected"></i> ${p.estatus}</span></td>
-            <td>
-                <div style="text-align: center;">
+                <td><strong>${p.nombre_proyecto}</strong><br><small style="color:gray;">${p.descripcion || 'Sin descripción'}</small></td>
+                <td><i class="bi bi-building"></i> ${p.cliente_nombre}</td>
+                <td><i class="bi bi-person-workspace"></i> ${p.lider_nombre}</td>
+                <td>${fInicio}</td>
+                <td>${fEntrega}</td>
+                <td><span class="badge-status" style="background:#e0f2fe; color:#0369a1; padding: 3px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;"><i class="bi bi-gear-wide-connected"></i> ${p.estatus}</span></td>
+                <td>
                     <select class="select-acciones-p" data-id="${p.id_proyecto}">
                         <option value="" selected disabled>-- Acciones --</option>
                         <option value="editar_status">Editar Estatus</option>
                         <option value="eliminar">Eliminar Proyecto</option>
                     </select>
-                </div>
-            </td>
-        `;
+                </td>
+            `;
 
-            // EVENTO: Escuchar los cambios del selector
+            // Mantienes tus escuchadores del cambio de select igual...
             tr.querySelector('.select-acciones-p').addEventListener('change', async (e) => {
                 const id_proyecto = e.target.getAttribute('data-id');
                 const accion = e.target.value;
-
-                if (accion === 'eliminar') {
-                    await eliminarProyecto(id_proyecto);
-                } else if (accion === 'editar_status') {
-                    await abrirModalEditarEstatus(id_proyecto, p.nombre_proyecto, p.estatus);
-                }
-
-                // Resetear el select a su estado por defecto
+                if (accion === 'eliminar') await eliminarProyecto(id_proyecto);
+                else if (accion === 'editar_status') await abrirModalEditarEstatus(id_proyecto, p.nombre_proyecto, p.estatus);
                 e.target.value = "";
             });
 
             tablaBody.appendChild(tr);
         });
     } catch (error) {
-        tablaBody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
+        tablaBody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Error de aislamiento: ${error.message}</td></tr>`;
     }
 }
 

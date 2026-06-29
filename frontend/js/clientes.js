@@ -1,10 +1,47 @@
+import { exportarA_PDF } from './reportes.js'; // Importación de la función centralizada para exportar a PDF
+let clientesCargados = []; // Variable global para almacenar los clientes cargados
 // Función principal que inicializa el módulo de clientes
 export async function initClientes() {
     console.log("Inicializando lógica de Clientes...");
-    
+    await cargarFiltroEstadosClientesDinamico();
     // Listar los clientes cargados inicialmente
     await listarClientes();
 
+    document.getElementById('btn-pdf-clientes').addEventListener('click', () => {
+        if (clientesCargados.length === 0) return;
+
+        const cabeceras = ["RAZÓN SOCIAL", "RFC", "CORREO CORPORATIVO", "TELÉFONO", "UBICACIÓN COMERCIAL"];
+        
+        const filas = clientesCargados.map(c => [
+            c.razon_social,
+            c.rfc,
+            c.correo,
+            c.telefono_1,
+            `${c.colonia}, ${c.municipio}, ${c.estado} (CP ${c.codigo_postal})`
+        ]);
+
+        exportarA_PDF("Padrón de Clientes Comerciales Activos", cabeceras, filas);
+    });
+
+    async function cargarFiltroEstadosClientesDinamico() {
+    const selectEstado = document.getElementById('filtro-estado-cliente');
+    if (!selectEstado) return;
+
+        try {
+            const respuesta = await fetch('/api/clientes/estados-activos');
+            const estados = await respuesta.json();
+
+            // Limpiamos opciones anteriores manteniendo el encabezado neutro
+            selectEstado.innerHTML = '<option value="">Todos los estados</option>';
+            
+            // Inyectamos únicamente los estados que arrojó el SELECT DISTINCT de MySQL
+            estados.forEach(estado => {
+                selectEstado.innerHTML += `<option value="${estado}">${estado}</option>`;
+            });
+        } catch (error) {
+            console.error("Error al poblar el combo dinámico de estados de clientes:", error);
+        }
+    }
     // ---- EVENTOS DE FILTRADO EN TIEMPO REAL ----
     document.getElementById('buscar-cliente').addEventListener('input', listarClientes);
     document.getElementById('filtro-estado-cliente').addEventListener('change', listarClientes);
@@ -212,6 +249,8 @@ async function listarClientes() {
             tablaBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">No hay registros de clientes que coincidan.</td></tr>`;
             return;
         }
+        
+        clientesCargados = clientes; // Almacenar los clientes cargados
 
         clientes.forEach(cli => {
             const tr = document.createElement('tr');

@@ -702,3 +702,46 @@ body {
     background-color: #ffffff !important;
     background-image: var(--select-arrow-bg) !important;
 }
+
+/* ==========================================================================
+   11. BOTONES DE ACCIÓN DIRECTA PARA SOLICITUDES (PALOMITA Y X)
+   ========================================================================== */
+.btn-accion-check, .btn-accion-x {
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%; /* Hace el botón completamente redondo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+}
+
+/* Estilos para el botón Aceptar (Palomita) */
+.btn-accion-check {
+    background-color: #f0fdf4; /* Fondo verde ultra suave */
+    color: #16a34a; /* Icono verde esmeralda */
+    border: 1px solid #dcfce7;
+}
+
+.btn-accion-check:hover {
+    background-color: #16a34a; /* Se vuelve verde sólido al hover */
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+/* Estilos para el botón Rechazar (Equis) */
+.btn-accion-x {
+    background-color: #fef2f2; /* Fondo rojo ultra suave */
+    color: #dc2626; /* Icono rojo carmín */
+    border: 1px solid #fee2e2;
+}
+
+.btn-accion-x:hover {
+    background-color: #dc2626; /* Se vuelve rojo sólido al hover */
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}

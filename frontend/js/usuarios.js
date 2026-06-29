@@ -1,6 +1,28 @@
+import { exportarA_PDF } from './reportes.js'; // Importación de la función centralizada para exportar a PDF
+let usuariosCargados = []; // Variable global para almacenar los usuarios cargados
 // Función principal que inicializa todo el módulo de usuarios
 export async function initUsuarios() {
     console.log("Inicializando lógica de Usuarios...");
+    await cargarFiltroEstadosDinamico(); // Cargar dinámicamente los estados activos en el filtro
+
+    document.getElementById('btn-pdf-usuarios').addEventListener('click', () => {
+        if (usuariosCargados.length === 0) return;
+
+        const cabeceras = ["USUARIO", "NOMBRE COMPLETO", "CURP", "NSS", "ÁREA", "CORREO", "TELÉFONO", "CONTRATACIÓN"];
+        
+        const filas = usuariosCargados.map(u => [
+            `@${u.username}`,
+            `${u.nombre} ${u.apellido_paterno} ${u.apellido_materno || ''}`,
+            u.curp,
+            u.nss ? String(u.nss) : 'No registrado',
+            u.nombre_area || 'Asignada', // Nombre del join con cat_areas
+            u.correo,
+            u.telefono_1,
+            new Date(u.fecha_contratacion).toLocaleDateString('es-MX')
+        ]);
+
+        exportarA_PDF("Nómina y Personal Interno de la Empresa", cabeceras, filas);
+    });
 
     // ---- BLOQUE DE VALIDACIONES DINÁMICAS EN TIEMPO REAL ----
 
@@ -167,6 +189,23 @@ export async function initUsuarios() {
     await cargarAreas();
     await listarUsuarios();
 
+    async function cargarFiltroEstadosDinamico() {
+    const selectEstado = document.getElementById('filtro-estado');
+    if (!selectEstado) return;
+
+    try {
+        const respuesta = await fetch('/api/usuarios/estados-activos');
+        const estados = await respuesta.json();
+
+        // Mantenemos la opción por defecto y concatenamos las reales de la BD
+        selectEstado.innerHTML = '<option value="">Todos los estados</option>';
+        estados.forEach(estado => {
+            selectEstado.innerHTML += `<option value="${estado}">${estado}</option>`;
+        });
+    } catch (error) {
+        console.error("Error al cargar el catálogo dinámico de estados:", error);
+    }
+
     // ---- EVENTOS DE FILTRADO ----
     document.getElementById('buscar-usuario').addEventListener('input', listarUsuarios);
     document.getElementById('filtro-area').addEventListener('change', listarUsuarios);
@@ -296,7 +335,7 @@ document.getElementById('form-registro-usuario').addEventListener('submit', asyn
         if (typeof listarUsuarios === 'function') await listarUsuarios();
 
     } catch (error) {
-        // 🚀 Alerta Estética Unificada de Error del Servidor usando window.Swal
+        // Alerta Estética Unificada de Error del Servidor usando window.Swal
         window.Swal.fire({
             title: 'Error de Registro',
             text: error.message,
@@ -321,13 +360,15 @@ async function listarUsuarios() {
         const respuesta = await fetch(url);
         const usuarios = await respuesta.json();
 
+        usuariosCargados = usuarios;
+
         tablaBody.innerHTML = '';
 
         if (usuarios.length === 0) {
             tablaBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">No se encontraron usuarios activos.</td></tr>`;
             return;
         }
-
+        
         usuarios.forEach(user => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -492,4 +533,4 @@ async function cargarAreas() {
     } catch (error) {
         console.error("Error al cargar el catálogo de áreas:", error.message);
     }
-}
+}}

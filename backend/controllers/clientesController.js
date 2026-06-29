@@ -98,3 +98,19 @@ export const eliminarCliente = async (req, res) => {
         res.status(500).json({ mensaje: 'Error en el proceso de baja del cliente', error: error.message });
     }
 };
+
+export const getEstadosClientesActivos = async (req, res) => {
+    try {
+        const query = `
+            SELECT DISTINCT estado 
+            FROM clientes 
+            WHERE activo = 1 AND estado IS NOT NULL AND estado != ''
+            ORDER BY estado ASC
+        `;
+        const [rows] = await db.query(query);
+        const listaEstados = rows.map(row => row.estado);
+        res.json(listaEstados);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al consultar los estados de clientes', error: error.message });
+    }
+};

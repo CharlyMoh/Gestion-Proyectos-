@@ -3,23 +3,45 @@ import db from '../config/db.js';
 // 1. LISTAR PROYECTOS
 const getProyectos = async (req, res) => {
     try {
-        const { busqueda, estatus } = req.query;
+        // 1. Extraemos los filtros normales + los datos de la sesión del solicitante
+        const { busqueda, estatus, usuario_rol, usuario_id } = req.query;
+
         let query = `
-            SELECT p.*, c.razon_social AS cliente_nombre, CONCAT(u.nombre, ' ', u.apellido_paterno) AS lider_nombre
+            SELECT p.*, 
+                   c.razon_social AS cliente_nombre,
+                   CONCAT(u.nombre, ' ', u.apellido_paterno) AS lider_nombre
             FROM proyectos p
             INNER JOIN clientes c ON p.id_cliente = c.id_cliente
             INNER JOIN usuarios u ON p.id_usuario_asignado = u.id_usuario
             WHERE p.activo = 1
         `;
         const params = [];
-        if (busqueda) { query += ` AND p.nombre_proyecto LIKE ?`; params.push(`%${busqueda}%`); }
-        if (estatus) { query += ` AND p.estatus = ?`; params.push(estatus); }
+
+        // Si es Operador, forzamos que el query solo traiga donde sea el líder asignado.
+        // Si es Supervisor, el 'if' se ignora y se mantiene la visión macro total.
+        if (usuario_rol === 'Operador') {
+            query += ` AND p.id_usuario_asignado = ?`;
+            params.push(Number(usuario_id));
+        }
+
+        // 3. Filtros dinámicos de búsqueda tradicionales
+        if (busqueda && busqueda.trim() !== '') {
+            query += ` AND p.nombre_proyecto LIKE ?`;
+            params.push(`%${busqueda.trim()}%`);
+        }
+
+        if (estatus && estatus !== '') {
+            query += ` AND p.estatus = ?`;
+            params.push(estatus);
+        }
+
         query += ` ORDER BY p.id_proyecto DESC`;
 
         const [rows] = await db.query(query, params);
         res.json(rows);
+
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al consultar proyectos', error: error.message });
+        res.status(500).json({ mensaje: 'Error seguro al consultar proyectos', error: error.message });
     }
 };
 
