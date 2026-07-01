@@ -2,6 +2,7 @@
 -- SCRIPT DE DESPLIEGUE ESTRUCTURAL (SCHEMA.SQL)
 -- SISTEMA DE GESTIÓN ADMINISTRATIVA TI
 -- Autor: Carlos Manuel Ojeda Hernández
+-- Versión: 2.0 (Soporte Híbrido de Solicitudes de Baja)
 -- ==========================================================================
 
 -- 1. PREPARACIÓN DE LA BASE DE DATOS (Instalación desde cero)
@@ -45,7 +46,7 @@ CREATE TABLE clientes (
 CREATE TABLE usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- Soporta hashes de Bcrypt generados por tu semilla
+    password VARCHAR(255) NOT NULL, -- Soporta hashes de Bcrypt generados por tu semilla de aplicación
     rol ENUM('Operador', 'Supervisor') NOT NULL DEFAULT 'Operador',
     nombre VARCHAR(50) NOT NULL,
     apellido_paterno VARCHAR(50) NOT NULL,
@@ -86,17 +87,18 @@ CREATE TABLE proyectos (
     FOREIGN KEY (id_usuario_asignado) REFERENCES usuarios(id_usuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bandeja de Solicitudes de Baja Supervisadas
+-- Bandeja de Solicitudes de Baja Evolucionada (Soporta Clientes y Proyectos en paralelo)
 CREATE TABLE solicitudes_baja (
     id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
-    id_cliente INT NOT NULL,
+    id_cliente INT NULL,                -- NULL si la solicitud es para un proyecto
+    id_proyecto INT NULL,               -- NULL si la solicitud es para un cliente
     id_usuario_solicita INT NOT NULL,
     estatus ENUM('Pendiente', 'Aceptada', 'Rechazada') NOT NULL DEFAULT 'Pendiente',
     fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+    FOREIGN KEY (id_proyecto) REFERENCES proyectos(id_proyecto),
     FOREIGN KEY (id_usuario_solicita) REFERENCES usuarios(id_usuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 -- ==========================================================================
 -- 5. SEMILLAS ESTÁTICAS DE SISTEMA (No confidenciales)
@@ -104,4 +106,4 @@ CREATE TABLE solicitudes_baja (
 
 -- Precarga obligatoria de departamentos para que funcione el formulario de usuarios
 INSERT INTO cat_areas (nombre_area) 
-VALUES ('Administración'), ('Bodeguero'), ('Oficinista'), ('Vendedor') ;
+VALUES ('Administración'), ('Bodeguero'), ('Oficinista'), ('Vendedor');

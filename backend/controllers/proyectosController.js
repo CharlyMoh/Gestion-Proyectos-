@@ -58,13 +58,44 @@ const createProyecto = async (req, res) => {
 };
 
 // 3. ELIMINAR PROYECTO
-const eliminarProyecto = async (req, res) => {
+// ELIMINAR PROYECTO DIRECTO O CREAR PETICIÓN DE REVISIÓN SEGÚN ROL
+export const eliminarProyecto = async (req, res) => {
+    const { id } = req.params; // ID del proyecto enviado en la URL
+    const { usuario_rol, usuario_id } = req.body; // Parámetros de sesión enviados en el body
+
     try {
-        const { id } = req.params;
-        await db.query('UPDATE proyectos SET activo = 0 WHERE id_proyecto = ?', [id]);
-        res.json({ mensaje: 'Proyecto archivado y dado de baja del sistema con éxito.' });
+        // CASO A: SI ES SUPERVISOR -> Borrado lógico inmediato en MySQL
+        if (usuario_rol === 'Supervisor') {
+            const queryBorrado = 'UPDATE proyectos SET activo = 0 WHERE id_proyecto = ?';
+            await db.query(queryBorrado, [id]);
+            return res.json({ status: 'success', mensaje: 'Proyecto dado de baja del sistema directamente.' });
+        }
+
+        // CASO B: SI ES OPERADOR -> Se genera una solicitud de autorización
+        // 1. Validamos que no exista ya una solicitud de baja pendiente para este mismo proyecto
+        const [existe] = await db.query(
+            'SELECT id_solicitud FROM solicitudes_baja WHERE id_proyecto = ? AND estatus = "Pendiente"',
+            [id]
+        );
+
+        if (existe.length > 0) {
+            return res.status(400).json({ mensaje: 'Ya hay una solicitud de baja en revisión para este proyecto.' });
+        }
+
+        // 2. Insertamos la petición apuntando al id_proyecto correspondiente
+        const querySolicitud = `
+            INSERT INTO solicitudes_baja (id_proyecto, id_usuario_solicita, estatus)
+            VALUES (?, ?, 'Pendiente')
+        `;
+        await db.query(querySolicitud, [id, usuario_id]);
+
+        res.json({ 
+            status: 'pending', 
+            mensaje: 'Acción restringida. Se ha enviado una solicitud de autorización al Supervisor.' 
+        });
+
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al archivar el proyecto', error: error.message });
+        res.status(500).json({ mensaje: 'Error en el flujo de autorización', error: error.message });
     }
 };
 

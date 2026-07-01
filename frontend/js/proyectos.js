@@ -276,36 +276,84 @@ async function listarProyectos() {
     }
 }
 
-async function eliminarProyecto(id) {
+// async function eliminarProyecto(id) {
+//     const confirmacion = await window.Swal.fire({
+//         title: '¿Eliminar proyecto?',
+//         text: "Esta acción aplicará un borrado lógico en la base de datos.",
+//         icon: 'warning',
+//         showCancelButton: true,
+//         confirmButtonText: 'Sí, borrar',
+//         cancelButtonText: 'Cancelar',
+//         reverseButtons: true,
+//         customClass: { popup: 'swal2-popup-custom', title: 'swal2-title-custom', confirmButton: 'swal2-confirm-custom', cancelButton: 'swal2-cancel-custom' }
+//     });
+
+//     if (!confirmacion.isConfirmed) return;
+
+//     try {
+//         const res = await fetch(`/api/proyectos/eliminar/${id}`, { method: 'POST' });
+//         const data = await res.json();
+
+//         if (!res.ok) throw new Error(data.mensaje);
+
+//         window.Swal.fire({
+//             title: 'Eliminado',
+//             text: data.mensaje,
+//             icon: 'success',
+//             customClass: { popup: 'swal2-popup-custom', title: 'swal2-title-custom', confirmButton: 'swal2-confirm-custom' }
+//         });
+//         listarProyectos();
+//     } catch (error) {
+//         window.Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+//     }
+// }
+
+export async function eliminarProyecto(id_proyecto) {
+    // 1. Extraer los datos seguros de la sesión actual de la SPA
+    const sesion = JSON.parse(localStorage.getItem('sesion_usuario')) || { id_usuario: 0, rol: 'Operador' };
+
+    // Confirmación estética inicial mediante SweetAlert2
     const confirmacion = await window.Swal.fire({
-        title: '¿Eliminar proyecto?',
-        text: "Esta acción aplicará un borrado lógico en la base de datos.",
+        title: '¿Confirmar baja?',
+        text: "Esta acción solicitará o ejecutará la desactivación del proyecto.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, borrar',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true,
-        customClass: { popup: 'swal2-popup-custom', title: 'swal2-title-custom', confirmButton: 'swal2-confirm-custom', cancelButton: 'swal2-cancel-custom' }
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#cbd5e1',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
     });
 
     if (!confirmacion.isConfirmed) return;
 
     try {
-        const res = await fetch(`/api/proyectos/eliminar/${id}`, { method: 'POST' });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.mensaje);
-
-        window.Swal.fire({
-            title: 'Eliminado',
-            text: data.mensaje,
-            icon: 'success',
-            customClass: { popup: 'swal2-popup-custom', title: 'swal2-title-custom', confirmButton: 'swal2-confirm-custom' }
+        // 2. Consumimos el endpoint mandando el rol y el ID dentro del cuerpo de la petición (body)
+        const respuesta = await fetch(`/api/proyectos/eliminar/${id_proyecto}`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                usuario_rol: sesion.rol,
+                usuario_id: sesion.id_usuario
+            })
         });
-        listarProyectos();
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) throw new Error(resultado.mensaje);
+
+        // 3. Orquestamos la respuesta visual adaptada según el rol evaluado por el backend
+        if (resultado.status === 'success') {
+            // Flujo Supervisor exitoso directo
+            await window.Swal.fire('¡Dado de baja!', resultado.mensaje, 'success');
+        } else if (resultado.status === 'pending') {
+            // Flujo Operador redirigido a bandeja
+            await window.Swal.fire('Petición Registrada', resultado.mensaje, 'info');
+        }
+
+        // 4. Recargar la tabla en tiempo real para reflejar cambios inmediatos si aplica
+        await listarProyectos();
+
     } catch (error) {
-        window.Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+        window.Swal.fire('Control de Cambios', error.message, 'error');
     }
-
-
 }

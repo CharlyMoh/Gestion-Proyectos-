@@ -2,7 +2,7 @@ let pestañaActiva = 'pendientes'; // Estado global del módulo: 'pendientes' o 
 
 export async function initSolicitudes() {
     console.log("Inicializando módulo de solicitudes segmentado...");
-    
+
     pestañaActiva = 'pendientes'; // Resetear al entrar al módulo
     await listarSolicitudes();
 
@@ -26,14 +26,18 @@ async function listarSolicitudes() {
     const tablaBody = document.getElementById('tabla-solicitudes-body');
     if (!tablaBody) return;
 
-    const sesion = JSON.parse(localStorage.getItem('sesion_usuario'));
+    const sesion = JSON.parse(localStorage.getItem('sesion_usuario')) || {};
+
+    const usuarioId = sesion.id_usuario || sesion.id || 0;
+    const usuarioRol = sesion.rol || sesion.role || 'Operador';
 
     try {
         const endpoint = pestañaActiva === 'pendientes'
-            ? '/api/solicitudes/pendientes'
-            : '/api/solicitudes/historial';
+        ? '/api/solicitudes/pendientes'
+        : '/api/solicitudes/historial';
 
-        const url = `${endpoint}?id_usuario=${sesion.id_usuario}&rol=${sesion.rol}`;
+        // Mandamos las variables blindadas en la Query String
+        const url = `${endpoint}?id_usuario=${usuarioId}&rol=${usuarioRol}`;
 
         const respuesta = await fetch(url);
         const solicitudes = await respuesta.json();
@@ -54,84 +58,103 @@ async function listarSolicitudes() {
             `;
             return;
         }
-
         solicitudes.forEach(sol => {
 
             const tr = document.createElement('tr');
             const fSolicitud = new Date(sol.fecha_solicitud).toLocaleDateString('es-MX');
 
-            // Badge de estatus
+            // Determinar tipo en caliente
+            const esProyecto = sol.id_proyecto ? true : false;
+
+            // 1. Configurar el Badge de Estatus gráfico
             let badge = `
-                <span class="badge-status" style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:12px;font-size:.78rem;font-weight:600;">
-                    <i class="bi bi-clock-history"></i> ${sol.estatus}
-                </span>
-            `;
+        <span class="badge-status" style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:12px;font-size:.78rem;font-weight:600;">
+            <i class="bi bi-clock-history"></i> ${sol.estatus}
+        </span>
+    `;
 
             if (sol.estatus === 'Aceptada' || sol.estatus === 'Aprobada') {
                 badge = `
-                    <span class="badge-status badge-activa badge-aceptada">
-                        <i class="bi bi-check-circle-fill"></i> ${sol.estatus}
-                    </span>
-                `;
-            }
-
-            if (sol.estatus === 'Rechazada') {
+            <span class="badge-status badge-activa badge-aceptada">
+                <i class="bi bi-check-circle-fill"></i> ${sol.estatus}
+            </span>
+        `;
+            } else if (sol.estatus === 'Rechazada') {
                 badge = `
-                    <span class="badge-status badge-activa badge-rechazada">
-                        <i class="bi bi-x-circle-fill"></i> ${sol.estatus}
-                    </span>
-                `;
+            <span class="badge-status badge-activa badge-rechazada">
+                <i class="bi bi-x-circle-fill"></i> ${sol.estatus}
+            </span>
+        `;
             }
 
-            // Columna de acciones
-            let acciones = badge;
+            // 2. Configurar la Columna de Acciones (Evitamos duplicar el badge)
+            let acciones = ``; 
 
-            // Sólo Supervisor en pendientes puede aceptar/rechazar
+            // Sólo el Supervisor en la pestaña de PENDIENTES puede interactuar con los botones
             if (pestañaActiva === 'pendientes' && sesion.rol !== 'Operador') {
                 acciones = `
-                    <div style="display:flex;gap:.4rem;align-items:center;justify-content:center;">
-                        <button class="btn-accion-check btn-aceptar-sol"
-                                data-id="${sol.id_solicitud}"
-                                title="Aceptar Solicitud">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
+            <div style="display:flex;gap:.4rem;align-items:center;justify-content:center;">
+                <button class="btn-accion-check btn-aceptar-sol"
+                        data-id="${sol.id_solicitud}"
+                        title="Aceptar Solicitud">
+                    <i class="bi bi-check-lg"></i>
+                </button>
 
-                        <button class="btn-accion-x btn-rechazar-sol"
-                                data-id="${sol.id_solicitud}"
-                                title="Rechazar Solicitud">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                `;
+                <button class="btn-accion-x btn-rechazar-sol"
+                        data-id="${sol.id_solicitud}"
+                        title="Rechazar Solicitud">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        `;
+            } else if (pestañaActiva === 'historial') {
+                // En el historial se ve limpio indicando que ya fue resuelto
+                acciones = `<span style="color:gray; font-size:0.8rem;">Ninguna</span>`;
             }
 
+            // 3. ARMADO DE FILA MATEMÁTICO (Alineado 100% con los Th de tu HTML)
+            // ... dentro de tu solicitudes.forEach(sol => { ... ) en solicitudes.js
+
             tr.innerHTML = `
-                <td><strong>${sol.tipo_solicitud ?? 'Solicitud de Baja'}</strong></td>
+    <!-- Columna 1: Fecha Solicitud -->
+    <td><strong>${fSolicitud}</strong></td>
 
-                <td>
-                    <i class="bi bi-person-fill"></i>
-                    ${sol.solicitante_nombre ?? sol.operador_nombre}
-                </td>
+    <!-- Columna 2: Cliente / Registro a Eliminar -->
+    <td>
+        <strong>${esProyecto ? (sol.nombre_proyecto ?? 'Proyecto TI') : (sol.razon_social ?? 'Cliente Comercial')}</strong>
+        <br>
+        <small style="color:var(--text-muted); font-size:0.75rem;">
+            ${esProyecto ? 'Tipo: Baja de Proyecto' : 'Tipo: Baja de Cliente'}
+        </small>
+    </td>
 
-                <td>
-                    ${sol.detalles ??
-                        `<strong>${sol.razon_social}</strong><br>
-                        <small>${sol.rfc}</small>`}
-                </td>
+    <!-- Columna 3: RFC (¡AHORA 100% DINÁMICO Y COMPLETO!) -->
+    <td>
+        <strong>${sol.rfc ?? 'Sin RFC'}</strong>
+        ${esProyecto
+                    ? `<br><small style="color:var(--text-muted); font-size:0.72rem;"></small>`
+                    : ''
+                }
+    </td>
 
-                <td>${fSolicitud}</td>
+    <!-- Columna 4: Usuario Solicitante -->
+    <td>
+        <i class="bi bi-person-fill" style="color:var(--text-muted);"></i>
+        ${sol.operador_nombre ?? sol.solicitante_nombre ?? 'Samuel'}
+    </td>
 
-                <td>${badge}</td>
+    <!-- Columna 5: Estatus -->
+    <td>${badge}</td>
 
-                <td>${acciones}</td>
-            `;
-
-            // Eventos de los botones
+    <!-- Columna 6: Acción -->
+    <td style="text-align:center;">${acciones}</td>
+`;
+            // Eventos de los botones (Se mantienen intactos e inteligentes)
             const btnAceptar = tr.querySelector('.btn-aceptar-sol');
             if (btnAceptar) {
                 btnAceptar.addEventListener('click', (e) => {
                     const id = e.currentTarget.dataset.id;
-                    procesarSolicitudBaja(id, 'Aceptada');
+                    procesarSolicitudBaja(id, 'Aceptada', esProyecto ? 'proyecto' : 'cliente');
                 });
             }
 
@@ -139,7 +162,7 @@ async function listarSolicitudes() {
             if (btnRechazar) {
                 btnRechazar.addEventListener('click', (e) => {
                     const id = e.currentTarget.dataset.id;
-                    procesarSolicitudBaja(id, 'Rechazada');
+                    procesarSolicitudBaja(id, 'Rechazada', esProyecto ? 'proyecto' : 'cliente');
                 });
             }
 
@@ -157,12 +180,15 @@ async function listarSolicitudes() {
     }
 }
 
-async function procesarSolicitudBaja(id, accion) {
-    const textoAccion = accion === 'Aceptada' ? 'AUTORIZAR la eliminación lógica' : 'RECHAZAR la solicitud';
-    
+async function procesarSolicitudBaja(id, accion, tipo = 'registro') {
+    //  Determinamos dinámicamente el sujeto de la oración según el tipo
+    const sujeto = tipo === 'proyecto' ? 'este proyecto tecnológico' : 'este cliente comercial';
+
+    const textoAccion = accion === 'Aceptada' ? `AUTORIZAR la eliminación lógica de ${sujeto}` : 'RECHAZAR la solicitud';
+
     const resultado = await Swal.fire({
         title: '¿Confirmar decisión?',
-        text: `¿Está seguro de ${textoAccion} de este cliente comercial?`,
+        text: `¿Está seguro de que desea ${textoAccion}?`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
@@ -192,7 +218,7 @@ async function procesarSolicitudBaja(id, accion) {
             icon: 'success',
             customClass: { popup: 'swal2-popup-custom', title: 'swal2-title-custom', htmlContainer: 'swal2-html-custom', confirmButton: 'swal2-confirm-custom' }
         });
-        
+
         await listarSolicitudes();
 
     } catch (error) {

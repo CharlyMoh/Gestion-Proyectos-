@@ -31,24 +31,27 @@ export const registrarSolicitud = async (req, res) => {
     }
 };
 
-// 2. OBTENER SOLICITUDES PENDIENTES (Con cruce de datos de Clientes y Usuarios)
+// 2. OBTENER SOLICITUDES PENDIENTES (Con cruce de datos híbrido para Clientes y Proyectos)
 export const getSolicitudesPendientes = async (req, res) => {
     try {
-        const { id_usuario, rol } = req.query; // Recibimos el contexto del usuario actual
+        const { id_usuario, rol } = req.query;
         
         let query = `
-            SELECT s.id_solicitud, s.fecha_solicitud, s.estatus,
-            c.id_cliente, c.razon_social, c.rfc,
-            u.nombre AS operador_nombre, u.username AS operador_username
+            SELECT 
+                s.id_solicitud, s.fecha_solicitud, s.estatus, s.id_proyecto,
+                c.id_cliente, c.razon_social, c.rfc,
+                p.nombre_proyecto,
+                u.nombre AS operador_nombre, u.username AS operador_username
             FROM solicitudes_baja s
-            INNER JOIN clientes c ON s.id_cliente = c.id_cliente
+            LEFT JOIN clientes c ON s.id_cliente = c.id_cliente
+            LEFT JOIN proyectos p ON s.id_proyecto = p.id_proyecto
             INNER JOIN usuarios u ON s.id_usuario_solicita = u.id_usuario
             WHERE s.estatus = 'Pendiente'
         `;
         const params = [];
 
-        // Si es Operador, blindamos la consulta para que solo vea las suyas
-        if (rol === 'Operador' && id_usuario) {
+        // 🔒 CANDADO DE SEGURIDAD INTERNO (Independiente de mayúsculas/minúsculas)
+        if (rol && rol.trim().toLowerCase() === 'operador' && id_usuario) {
             query += ` AND s.id_usuario_solicita = ?`;
             params.push(id_usuario);
         }
@@ -61,28 +64,32 @@ export const getSolicitudesPendientes = async (req, res) => {
     }
 };
 
-// 3. NUEVO: OBTENER HISTORIAL DE SOLICITUDES (Todas: Pendientes, Aceptadas y Rechazadas)
+// 3. OBTENER HISTORIAL DE SOLICITUDES (Corregido para excluir las pendientes)
 export const getHistorialSolicitudes = async (req, res) => {
     try {
         const { id_usuario, rol } = req.query;
         
         let query = `
-            SELECT s.id_solicitud, s.fecha_solicitud, s.estatus,
-            c.id_cliente, c.razon_social, c.rfc,
-            u.nombre AS operador_nombre, u.username AS operador_username
+            SELECT 
+                s.id_solicitud, s.fecha_solicitud, s.estatus, s.id_proyecto,
+                c.id_cliente, c.razon_social, c.rfc,
+                p.nombre_proyecto,
+                u.nombre AS operador_nombre, u.username AS operador_username
             FROM solicitudes_baja s
-            INNER JOIN clientes c ON s.id_cliente = c.id_cliente
+            LEFT JOIN clientes c ON s.id_cliente = c.id_cliente
+            LEFT JOIN proyectos p ON s.id_proyecto = p.id_proyecto
             INNER JOIN usuarios u ON s.id_usuario_solicita = u.id_usuario
+            WHERE s.estatus != 'Pendiente'
         `;
         const params = [];
 
-        // Si es Operador, el historial también se limita a sus acciones
-        if (rol === 'Operador' && id_usuario) {
-            query += ` WHERE s.id_usuario_solicita = ?`;
+        // 🔒 CANDADO DE SEGURIDAD INTERNO (Independiente de mayúsculas/minúsculas)
+        if (rol && rol.trim().toLowerCase() === 'operador' && id_usuario) {
+            query += ` AND s.id_usuario_solicita = ?`;
             params.push(id_usuario);
         }
 
-        query += ` ORDER BY s.fecha_solicitud DESC`; // Los movimientos más nuevos primero
+        query += ` ORDER BY s.fecha_solicitud DESC`;
         const [rows] = await db.query(query, params);
         res.json(rows);
     } catch (error) {
@@ -126,5 +133,41 @@ export const resolverSolicitud = async (req, res) => {
         res.status(500).json({ mensaje: 'Error al resolver la solicitud', error: error.message });
     } finally {
         connection.release();
+    }
+};
+
+// PROCESAR APROBACIÓN DE LA BANDEJA (Clic a la Palomita Verde)
+export const aprobarSolicitud = async (req, res) => {
+    const { id } = req.params; // ID de la solicitud de baja
+
+    try {
+        // 1. Consultamos los datos de la solicitud para saber qué registro impactar
+        const [solicitud] = await db.query(
+            'SELECT id_cliente, id_proyecto FROM solicitudes_baja WHERE id_solicitud = ?',
+            [id]
+        );
+
+        if (solicitud.length === 0) {
+            return res.status(404).json({ mensaje: 'La solicitud no existe en el sistema.' });
+        }
+
+        const { id_cliente, id_proyecto } = solicitud[0];
+
+        // 2. EVALUACIÓN CONDICIONAL DE IMPACTO MÁSTER
+        if (id_proyecto) {
+            // Si la solicitud tiene id_proyecto, hacemos el borrado lógico del proyecto asignado
+            await db.query('UPDATE proyectos SET activo = 0 WHERE id_proyecto = ?', [id_proyecto]);
+        } else if (id_cliente) {
+            // Si tiene id_cliente, ejecuta el borrado tradicional de clientes
+            await db.query('UPDATE clientes SET activo = 0 WHERE id_cliente = ?', [id_cliente]);
+        }
+
+        // 3. Cambiamos el estado de la solicitud a 'Aceptada' para moverla al historial
+        await db.query('UPDATE solicitudes_baja SET estatus = "Aceptada" WHERE id_solicitud = ?', [id]);
+
+        res.json({ mensaje: 'Solicitud autorizada y registro actualizado con éxito.' });
+
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al ejecutar la baja en cascada', error: error.message });
     }
 };
